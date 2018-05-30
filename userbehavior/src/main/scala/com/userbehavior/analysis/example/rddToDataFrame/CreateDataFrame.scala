@@ -20,28 +20,14 @@ object CreateDataFrame {
 
   case class UserBehavior(userId: Long, itemId: Long, categroyId: Long, behaviorType: String, dayId: Long)
 
-  def frame(filePath: String, sql: String): DataFrame = {
-    //spark的底层调用到了hadoop的api，hadoop的api里面用到了hadoop.home.dir环境变量，程序需要指定
-    System.setProperty("hadoop.home.dir", "D:\\jy\\work\\project\\Taobao-user-behavior\\hadoop-common-2.2.0-bin-master")
-    //从spark2.0开始，spark不再加载‘hive-site.xml'中的设置，也就是说，hive.metastore.warehouse.dir的设置无效。
-    //spark.sql.warehouse.dir的默认值为System.getProperty("user.dir")/spark-warehouse，需要在spark的配置文件core-site.xml中设置
-    System.setProperty("spark.sql.warehouse.dir", "D:\\py\\sparksqlwarehouse")
-
-    val sparkConf = new SparkConf().setAppName("SparkWriteHbase").setMaster("local")
-    val sc = new SparkContext(sparkConf)
+  def frame(filePath: String, sql: String, session: SparkSession): DataFrame = {
     val hbaseConf = HBaseConfiguration.create()
-    hbaseConf.set(TableInputFormat.INPUT_TABLE,"t_behavior_eveu")
-    hbaseConf.set(HConstants.ZOOKEEPER_QUORUM,"192.168.242.100:2181")
+    hbaseConf.set(TableInputFormat.INPUT_TABLE, "t_behavior_eveu")
+    hbaseConf.set(HConstants.ZOOKEEPER_QUORUM, "192.168.72.10:2181")
     val jobConf = new JobConf(hbaseConf)
     jobConf.setOutputFormat(classOf[TableOutputFormat])
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, "t_behavior_eveu")
 
-    // 定义sparkSession
-    val session = SparkSession.builder()
-      .appName("refrect-dataframe")
-      .config("spark.some.config.option", "some-value")
-      .master("local")
-      .getOrCreate()
     import session.implicits._
 
     // 数据用case class 封装，将时间戳转为dayId
@@ -56,23 +42,12 @@ object CreateDataFrame {
 
     val dataDF = session.sql(sql)
     dataDF.map(t => "categroyId:" + t(0) + ",triggerNum:" + t(1) + ",dayId:" + t(2)).show(false)
-
-    val rdd = dataDF.toJSON.rdd.map{arr=>{
-      val put = new Put(Bytes.toBytes(arr(0)+"_"+arr(3)))
-      put.add(Bytes.toBytes("info"),Bytes.toBytes("behaviorType"),Bytes.toBytes(arr(0)))
-      put.add(Bytes.toBytes("info"),Bytes.toBytes("ev"),Bytes.toBytes(arr(1)))
-      put.add(Bytes.toBytes("info"),Bytes.toBytes("eu"),Bytes.toBytes(arr(2)))
-      put.add(Bytes.toBytes("info"),Bytes.toBytes("dayId"),Bytes.toBytes(arr(3)))
-      (new ImmutableBytesWritable(),put)
-    }}
-    rdd.saveAsNewAPIHadoopDataset(jobConf)
-    sc.stop()
     dataDF
   }
 
 
   def main(args: Array[String]): Unit = {
-    frame("D:\\jy\\work\\project\\UserBehavior.csv","select behaviorType,count(1) as ev,count(distinct(userId)) as eu,dayId from behaviors GROUP BY behaviorType,dayId")
+//    frame("D:\\jy\\work\\project\\UserBehavior.csv", "select behaviorType,count(1) as ev,count(distinct(userId)) as eu,dayId from behaviors GROUP BY behaviorType,dayId")
   }
 
 }

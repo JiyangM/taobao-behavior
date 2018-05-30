@@ -4,7 +4,7 @@
     <profile name="Maven 1" modules="userbehavior">
       <parameters>
         <parameter value="-dependencyfile" />
-        <parameter value="D:\jy\work\project\Taobao-user-behavior\userbehavior\target/.scala_dependencies" />
+        <parameter value="D:\py\Taobao-user-behavior\userbehavior\target/.scala_dependencies" />
       </parameters>
     </profile>
   </component>
