@@ -5,7 +5,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{HBaseConfiguration, HConstants}
+import org.apache.hadoop.hbase.{Cell, HBaseConfiguration, HConstants}
 import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -35,7 +35,7 @@ object SparkWriteHbase {
       put.add(Bytes.toBytes("info"),Bytes.toBytes("age"),Bytes.toBytes(arr(3)))
       (new ImmutableBytesWritable(),put)
     }}
-    rdd.saveAsNewAPIHadoopDataset(jobConf)
+    rdd.saveAsHadoopDataset(jobConf)
     sc.stop()
   }
 }

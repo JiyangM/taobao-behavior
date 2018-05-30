@@ -9,8 +9,5 @@
         <module name="userbehavior" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="userbehavior" target="1.7" />
-    </bytecodeTargetLevel>
   </component>
 </project>

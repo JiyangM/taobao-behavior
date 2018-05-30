@@ -1,6 +1,14 @@
 package com.userbehavior.analysis.etl
 
 import com.userbehavior.analysis.example.rddToDataFrame.CreateDataFrame
+import org.apache.hadoop.hbase.{HBaseConfiguration, HConstants}
+import org.apache.hadoop.hbase.client.Put
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
+import org.apache.hadoop.hbase.mapred.TableOutputFormat
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat
+import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.mapred.JobConf
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * spark etl处理
@@ -17,6 +25,26 @@ object sparkEtl {
   def euEv(filePath: String): Unit = {
     val sql = "select behaviorType,count(1) as ev,count(distinct(userId)) as eu,dayId from behaviors GROUP BY behaviorType,dayId"
     val dataDF = CreateDataFrame.frame(filePath, sql)
+
+    val sparkConf = new SparkConf().setAppName("SparkWriteHbase").setMaster("local")
+    val sc = new SparkContext(sparkConf)
+    val hbaseConf = HBaseConfiguration.create()
+    hbaseConf.set(TableInputFormat.INPUT_TABLE,"t_behavior_eveu")
+    hbaseConf.set(HConstants.ZOOKEEPER_QUORUM,"192.168.242.100:2181")
+    val jobConf = new JobConf(hbaseConf)
+    jobConf.setOutputFormat(classOf[TableOutputFormat])
+    jobConf.set(TableOutputFormat.OUTPUT_TABLE, "t_behavior_eveu")
+
+    val rdd = dataDF.toJSON.rdd.map{arr=>{
+      val put = new Put(Bytes.toBytes(arr(0)+"_"+arr(3)))
+      put.add(Bytes.toBytes("info"),Bytes.toBytes("behaviorType"),Bytes.toBytes(arr(0)))
+      put.add(Bytes.toBytes("info"),Bytes.toBytes("ev"),Bytes.toBytes(arr(1)))
+      put.add(Bytes.toBytes("info"),Bytes.toBytes("eu"),Bytes.toBytes(arr(2)))
+      put.add(Bytes.toBytes("info"),Bytes.toBytes("dayId"),Bytes.toBytes(arr(3)))
+      (new ImmutableBytesWritable(),put)
+    }}
+    rdd.saveAsNewAPIHadoopDataset(jobConf)
+    sc.stop()
   }
 
 
@@ -31,7 +59,7 @@ object sparkEtl {
 
 
   def main(args: Array[String]): Unit = {
-    trigger("D:\\py\\UserBehavior.csv")
+    euEv("D:\\jy\\work\\project\\UserBehavior.csv")
   }
 
 }
