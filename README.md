@@ -15,23 +15,23 @@ https://tianchi.aliyun.com/datalab/dataSet.html?spm=5176.100073.0.0.6f3635ee884j
 所有行为数量 100,150,807
 
 ## 操作流程
-- 数据集下载
+- ####  数据集下载
 
-- 创建hive表
+- ####  创建hive表
 ```
 create table user_behaviors(userId int,itemId int,categoryId int,behaviorType string,times string)
 row format delimited
 fields terminated by ','
 stored as textfile;
 ```
-- 数据集文件导入hive表
+- ####  数据集文件导入hive表
 ```
 load data local inpath '/usr/local/apps/hive/ff/' into table user_behaviors;
 ```
 
 根据hdfs将文件分块存储策略 2*1024M/128M 约等于16，所以共有16个 block；
 
-- spark job分析任务
+- ####  spark job分析任务
   
   1.在应用层面分析，宏观上分析应用客户的使用情况， 统计每日、每个事件行为（行为包括点击、购买、加购、喜欢）触发的人数和次数。
  
@@ -44,7 +44,7 @@ load data local inpath '/usr/local/apps/hive/ff/' into table user_behaviors;
   ![image](https://github.com/JiyangM/Taobao-user-behavior/blob/master/image/euev.png)
   
   
-- 数据展示：
+- #### 数据展示：
   
   python 读取hbase 数据 存入csv，使用matplotlib进行展示
  
