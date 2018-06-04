@@ -45,4 +45,7 @@ load data local inpath '/usr/local/apps/hive/ff/' into table user_behaviors;
   
   
 - 数据展示：
-
+  
+  python 读取hbase 数据 存入csv，使用matplotlib进行展示
+ 
+ ![image](https://github.com/JiyangM/Taobao-user-behavior/blob/master/image/top10category.png)
